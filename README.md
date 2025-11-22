@@ -5,6 +5,7 @@
 [![Crowdin](https://badges.crowdin.net/obs-notifier/localized.svg)](https://crowdin.com/project/obs-notifier)
 
 This is a simple program for displaying notifications from OBS on your desktop.
+此分支实现了操作提示音。
 
 * Currently only Windows is supported.
 * Does not display notifications in the form of overlays (such applications are usually banned in game anti-cheats).
@@ -12,7 +13,7 @@ This is a simple program for displaying notifications from OBS on your desktop.
 
 ## Features
 
-* Ability to choose notifications sounds 支持自定义操作提示音
+* 支持自定义操作提示音 Ability to choose notifications sounds 
 * Supports `obs-websocket` 5.x (embedded in OBS 28+)
 * Plugin system
 * Separate settings for each plugin
