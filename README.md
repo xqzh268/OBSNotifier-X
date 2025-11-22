@@ -1,4 +1,4 @@
-# OBS Notifier
+# OBS Notifier - X
 
 <img src="Images/obs_notifier.png"/>
 
