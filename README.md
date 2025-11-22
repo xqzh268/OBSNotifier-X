@@ -12,6 +12,7 @@ This is a simple program for displaying notifications from OBS on your desktop.
 
 ## Features
 
+* Ability to choose notifications sounds 支持自定义操作提示音
 * Supports `obs-websocket` 5.x (embedded in OBS 28+)
 * Plugin system
 * Separate settings for each plugin
