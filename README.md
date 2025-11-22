@@ -51,6 +51,7 @@ If you have found a bug or want to suggest a new feature, then please create a n
 
 ## Support
 
+以下是对插件原作者的支持方式
 Your support adds motivation to develop my projects.
 
 <a href="https://boosty.to/dmitriysalnikov/donate"><img src="Images/readme/boosty.png" alt="Boosty" width=150px/></a>
