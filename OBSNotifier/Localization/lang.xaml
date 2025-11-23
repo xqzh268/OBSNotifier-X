@@ -74,6 +74,15 @@
         <v:String x:Key="audio_alerts_preview_button_short">Preview</v:String>
         <v:String x:Key="audio_alerts_browse_button">Custom...</v:String>
         <v:String x:Key="audio_alerts_sound_none">None</v:String>
+        <v:String x:Key="audio_alerts_type_label">Type:</v:String>
+        <v:String x:Key="audio_alerts_type_ring">Ring sound</v:String>
+        <v:String x:Key="audio_alerts_type_voice">Voice sound</v:String>
+        <v:String x:Key="audio_alerts_type_custom">Custom</v:String>
+        <v:String x:Key="audio_alerts_type_random">Random</v:String>
+        <v:String x:Key="audio_alerts_random_select_label">Random pool:</v:String>
+        <v:String x:Key="audio_alerts_sound_connected">Connected sound:</v:String>
+        <v:String x:Key="audio_alerts_sound_disconnected">Disconnected sound:</v:String>
+        <v:String x:Key="audio_alerts_restore_default_button">Restore defaults</v:String>
     <v:String x:Key="audio_alerts_tts_rate_label">TTS Rate:</v:String>
     <v:String x:Key="audio_alerts_tts_volume_label">TTS Volume:</v:String>
     <v:String x:Key="audio_alerts_preview_button">Preview sound</v:String>

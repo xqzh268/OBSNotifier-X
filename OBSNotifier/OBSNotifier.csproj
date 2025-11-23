@@ -461,14 +461,14 @@
 		<Resource Include="Images\websocket_hint.png" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Include="..\sounds\*.mp3">
-			<Link>sounds\%(Filename)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\sounds\*.wav">
-			<Link>sounds\%(Filename)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
+        <None Include="..\sounds\**\*.mp3">
+            <Link>sounds\%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\sounds\**\*.wav">
+            <Link>sounds\%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
 	</ItemGroup>
 	<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 	<PropertyGroup>

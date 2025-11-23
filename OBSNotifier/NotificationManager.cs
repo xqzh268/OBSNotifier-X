@@ -8,6 +8,7 @@ using System.Media;
 using System.Speech.Synthesis;
 using System.IO;
 using System.Windows.Media;
+using System.Linq;
 
 namespace OBSNotifier
 {
@@ -128,6 +129,7 @@ namespace OBSNotifier
         readonly App app;
         SpeechSynthesizer tts;
         MediaPlayer simplePlayer;
+        Random rand = new Random();
 
         // https://github.com/obsproject/obs-studio/blob/fab293a6862dbe6aca9eb1bde0b00fad2d2cd785/UI/window-basic-main.cpp#L3098
         readonly List<string> obs_audio_types = new List<string>
@@ -485,7 +487,9 @@ namespace OBSNotifier
                 bool isTarget = type == NotificationType.RecordingStarted ||
                                 type == NotificationType.RecordingStopped ||
                                 type == NotificationType.ReplaySaved ||
-                                type == NotificationType.ScreenshotSaved;
+                                type == NotificationType.ScreenshotSaved ||
+                                type == NotificationType.Connected ||
+                                type == NotificationType.Disconnected;
 
                 if (!isTarget)
                     return;
@@ -495,24 +499,10 @@ namespace OBSNotifier
                 }
                 else
                 {
-                    string file = null;
-                    switch (type)
-                    {
-                        case NotificationType.RecordingStarted:
-                            file = Settings.Instance.SoundForRecordingStarted;
-                            break;
-                        case NotificationType.RecordingStopped:
-                            file = Settings.Instance.SoundForRecordingStopped;
-                            break;
-                        case NotificationType.ReplaySaved:
-                            file = Settings.Instance.SoundForReplaySaved;
-                            break;
-                        case NotificationType.ScreenshotSaved:
-                            file = Settings.Instance.SoundForScreenshot;
-                            break;
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(file) && TryPlaySimple(file))
+                    var file = ResolveFileFor(type);
+                    if (string.IsNullOrWhiteSpace(file))
+                        return;
+                    if (TryPlaySimple(file))
                         return;
 
                     switch (type)
@@ -579,6 +569,160 @@ namespace OBSNotifier
             }
             catch { }
             return false;
+        }
+
+        string ResolveFileFor(NotificationType type)
+        {
+            string selType = null;
+            string selFile = null;
+            List<string> pool = null;
+            switch (type)
+            {
+                case NotificationType.Connected:
+                    selType = Settings.Instance.SoundTypeForConnected;
+                    selFile = Settings.Instance.SoundFileForConnected;
+                    pool = Settings.Instance.RandomPoolForConnected;
+                    break;
+                case NotificationType.Disconnected:
+                    selType = Settings.Instance.SoundTypeForDisconnected;
+                    selFile = Settings.Instance.SoundFileForDisconnected;
+                    pool = Settings.Instance.RandomPoolForDisconnected;
+                    break;
+                case NotificationType.RecordingStarted:
+                    selType = Settings.Instance.SoundTypeForRecordingStarted;
+                    selFile = Settings.Instance.SoundFileForRecordingStarted;
+                    pool = Settings.Instance.RandomPoolForRecordingStarted;
+                    break;
+                case NotificationType.RecordingStopped:
+                    selType = Settings.Instance.SoundTypeForRecordingStopped;
+                    selFile = Settings.Instance.SoundFileForRecordingStopped;
+                    pool = Settings.Instance.RandomPoolForRecordingStopped;
+                    break;
+                case NotificationType.ReplaySaved:
+                    selType = Settings.Instance.SoundTypeForReplaySaved;
+                    selFile = Settings.Instance.SoundFileForReplaySaved;
+                    pool = Settings.Instance.RandomPoolForReplaySaved;
+                    break;
+                case NotificationType.ScreenshotSaved:
+                    selType = Settings.Instance.SoundTypeForScreenshot;
+                    selFile = Settings.Instance.SoundFileForScreenshot;
+                    pool = Settings.Instance.RandomPoolForScreenshot;
+                    break;
+            }
+
+            if (string.IsNullOrWhiteSpace(selType))
+                return selFile;
+
+            if (selType == "Random")
+            {
+                var candidates = new List<string>();
+                if (pool != null && pool.Count > 0)
+                {
+                    candidates.AddRange(pool);
+                }
+                else
+                {
+                    candidates.AddRange(GetRingSounds());
+                    candidates.AddRange(GetTTSSoundsFor(type));
+                    if (Settings.Instance.CustomAudioFiles != null)
+                        candidates.AddRange(Settings.Instance.CustomAudioFiles);
+                }
+                candidates = candidates.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
+                if (candidates.Count == 0)
+                    return null;
+                return candidates[rand.Next(candidates.Count)];
+            }
+
+            if (selType == "Custom")
+                return selFile;
+
+            return selFile;
+        }
+
+        List<string> GetAvailableSounds()
+        {
+            var list = new List<string>();
+            var baseDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var exeDir = System.IO.Path.GetDirectoryName(baseDir);
+            var candidates = new List<string>();
+            candidates.Add(System.IO.Path.Combine(exeDir, "sounds"));
+            candidates.Add(System.IO.Path.GetFullPath(System.IO.Path.Combine(exeDir, "..", "..", "..", "sounds")));
+            candidates.Add(System.IO.Path.Combine(Environment.CurrentDirectory, "sounds"));
+            foreach (var dir in candidates)
+            {
+                try
+                {
+                    if (Directory.Exists(dir))
+                    {
+                        foreach (var p in Directory.GetFiles(dir, "*.mp3")) list.Add(System.IO.Path.GetFileName(p));
+                        foreach (var p in Directory.GetFiles(dir, "*.wav")) list.Add(System.IO.Path.GetFileName(p));
+                    }
+                }
+                catch { }
+            }
+            list = list.Distinct().OrderBy(s => s).ToList();
+            return list;
+        }
+
+        List<string> GetRingSounds()
+        {
+            var list = new List<string>();
+            var baseDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var exeDir = System.IO.Path.GetDirectoryName(baseDir);
+            var candidates = new List<string>();
+            candidates.Add(System.IO.Path.Combine(exeDir, "sounds", "ring_sound"));
+            candidates.Add(System.IO.Path.GetFullPath(System.IO.Path.Combine(exeDir, "..", "..", "..", "sounds", "ring_sound")));
+            candidates.Add(System.IO.Path.Combine(Environment.CurrentDirectory, "sounds", "ring_sound"));
+            foreach (var dir in candidates)
+            {
+                try
+                {
+                    if (Directory.Exists(dir))
+                    {
+                        foreach (var p in Directory.GetFiles(dir, "*.mp3")) list.Add("ring_sound/" + System.IO.Path.GetFileName(p));
+                        foreach (var p in Directory.GetFiles(dir, "*.wav")) list.Add("ring_sound/" + System.IO.Path.GetFileName(p));
+                        break;
+                    }
+                }
+                catch { }
+            }
+            return list.Distinct().ToList();
+        }
+
+        List<string> GetTTSSoundsFor(NotificationType type)
+        {
+            string folder = null;
+            switch (type)
+            {
+                case NotificationType.Connected: folder = "tts_sound_connection"; break;
+                case NotificationType.Disconnected: folder = "tts_sound_disconnection"; break;
+                case NotificationType.RecordingStarted: folder = "tts_sound_recording_on"; break;
+                case NotificationType.RecordingStopped: folder = "tts_sound_recording_off"; break;
+                case NotificationType.ReplaySaved: folder = "tts_sound_replay"; break;
+                case NotificationType.ScreenshotSaved: folder = "tts_sound_screenshot"; break;
+                default: return new List<string>();
+            }
+            var list = new List<string>();
+            var baseDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var exeDir = System.IO.Path.GetDirectoryName(baseDir);
+            var candidates = new List<string>();
+            candidates.Add(System.IO.Path.Combine(exeDir, "sounds", folder));
+            candidates.Add(System.IO.Path.GetFullPath(System.IO.Path.Combine(exeDir, "..", "..", "..", "sounds", folder)));
+            candidates.Add(System.IO.Path.Combine(Environment.CurrentDirectory, "sounds", folder));
+            foreach (var dir in candidates)
+            {
+                try
+                {
+                    if (Directory.Exists(dir))
+                    {
+                        foreach (var p in Directory.GetFiles(dir, "*.wav")) list.Add(folder + "/" + System.IO.Path.GetFileName(p));
+                        foreach (var p in Directory.GetFiles(dir, "*.mp3")) list.Add(folder + "/" + System.IO.Path.GetFileName(p));
+                        break;
+                    }
+                }
+                catch { }
+            }
+            return list.Distinct().ToList();
         }
     }
 }
